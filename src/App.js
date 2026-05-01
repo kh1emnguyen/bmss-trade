@@ -12,6 +12,17 @@ export default function App() {
   const [printing, setPrinting] = useState(false);
   const printTimestamp = useRef('');
 
+  // ── Formula panel state (your eyes only — hidden in PDF) ──────────────────
+  const [formulaParams, setFormulaParams] = useState({ d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' });
+  const setParam = (key) => (e) => setFormulaParams((p) => ({ ...p, [key]: e.target.value }));
+  const netMultiplier = useMemo(() => {
+    const d1 = parseFloat(formulaParams.d1) || 1;
+    const d2 = parseFloat(formulaParams.d2) || 1;
+    const m1 = parseFloat(formulaParams.m1) || 1;
+    const m2 = parseFloat(formulaParams.m2) || 1;
+    return (m1 * m2 / d1 / d2).toFixed(4);
+  }, [formulaParams]);
+
   // Listen for browser afterprint event to restore normal state.
   useEffect(() => {
     const handler = () => setPrinting(false);
@@ -69,7 +80,7 @@ export default function App() {
         <div>
           <h1>BMSS Trade Opportunity Dashboard — BM vs DC</h1>
           <div className="subtitle">
-            All-SKU comparison · DC ≤ BM × 1.05 · ≥ $10/unit on Wine &amp; Spirits · Discount Price = DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05
+            All-SKU comparison · DC ≤ BM × 1.05 · ≥ $10/unit on Wine &amp; Spirits · Disc Price = configurable margin (WINE only)
           </div>
         </div>
         <button className="btn-export" onClick={handleExportPdf} title="Export current view to PDF">
@@ -81,6 +92,26 @@ export default function App() {
       <div className="print-meta">
         <span>BMSS Trade Dashboard — {TAB_LABELS[tab]}</span>
         <span>Exported {printTimestamp.current}</span>
+      </div>
+
+      {/* ── Formula panel — your eyes only, hidden in PDF export ───────────── */}
+      <div className="formula-panel">
+        <div className="formula-panel-label">
+          Disc Price formula
+          <span className="formula-panel-note">your eyes only · hidden in PDF export · WINE rows only</span>
+        </div>
+        <div className="formula-panel-row">
+          <span className="formula-part">DC Carton</span>
+          <span className="formula-op">÷</span>
+          <input className="formula-input" type="number" step="0.001" min="0.001" value={formulaParams.d1} onChange={setParam('d1')} title="Strip GST" />
+          <span className="formula-op">÷</span>
+          <input className="formula-input" type="number" step="0.001" min="0.001" value={formulaParams.d2} onChange={setParam('d2')} title="Strip wholesale markup" />
+          <span className="formula-op">×</span>
+          <input className="formula-input" type="number" step="0.001" min="0" value={formulaParams.m1} onChange={setParam('m1')} title="Trade margin" />
+          <span className="formula-op">×</span>
+          <input className="formula-input" type="number" step="0.001" min="0" value={formulaParams.m2} onChange={setParam('m2')} title="Buffer / markup" />
+          <span className="formula-result">= DC × {netMultiplier} per unit</span>
+        </div>
       </div>
 
       {summary.top && (
@@ -110,49 +141,4 @@ export default function App() {
           <div className="value">{summary.avgDisc.toFixed(1)}%</div>
           <div className="sub">structural account-tier gap</div>
         </div>
-        <div className="summary-card">
-          <div className="label">Total save / carton</div>
-          <div className="value">{fmtMoney(summary.totalSave)}</div>
-          <div className="sub">summed across all qualifying SKUs</div>
-        </div>
-      </div>
-
-      <div className="tabs">
-        <button
-          className={'tab' + (tab === 'all' ? ' active' : '')}
-          onClick={() => setTab('all')}
-        >
-          1 · All SKUs
-        </button>
-        <button
-          className={'tab' + (tab === 'categories' ? ' active' : '')}
-          onClick={() => setTab('categories')}
-        >
-          2 · Category Drill-Down
-        </button>
-        <button
-          className={'tab' + (tab === 'market' ? ' active' : '')}
-          onClick={() => setTab('market')}
-        >
-          3 · Trade Opportunities
-        </button>
-      </div>
-
-      {tab === 'all' && <OpportunitiesPage rows={rows} printing={printing} />}
-      {tab === 'categories' && <CategoryDrillDown rows={rows} printing={printing} />}
-      {tab === 'market' && <MarketPicks rows={rows} printing={printing} />}
-
-      <div className="methodology">
-        <b>Methodology.</b> Unit price = Carton Cost (incl. taxes + allowance) ÷ Carton Size.
-        SKUs matched by exact Item Code across both pricelists. Filters: DC unit price ≤ BM × 1.05 (DC cheaper, at par, or up to 5% pricier);
-        ≥ $10/unit on WINE and SPIRITS only; ALM Warehouse rows only.
-        Save / carton = (BM − DC) × DC carton size.
-        <br /><br />
-        <b>Discount Price.</b> <code>DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05 ≈ DC × 0.847</code>.
-        Strips 10% GST and the 29% wholesale markup off the DC purchase price, then layers a 14.5% trade margin and a 5% buffer
-        to give the quotable trade price. The 29% wholesale markup is wine-specific, so the column is shown <b>only for WINE rows</b>;
-        spirits, beer, cider, RTDs, and liqueurs use different markup structures and aren't comparable through this formula.
-      </div>
-    </div>
-  );
-}
+        <div className="summ
