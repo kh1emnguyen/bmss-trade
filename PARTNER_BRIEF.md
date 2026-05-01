@@ -152,18 +152,25 @@ This section is read and executed directly by Claude (Cowork). No manual chat in
 
 ### One-time setup before scheduling
 
-1. Open `scripts/config.example.json` and copy it to `scripts/config.json`.
-2. Fill in three fields:
-   - `github_token` — a GitHub Fine-Grained PAT with **Contents: Read & Write** on the `bmss-trade` repo.
-     Create one at: github.com → Settings → Developer Settings → Personal access tokens → Fine-grained tokens.
-   - `github_repo` — e.g. `"khiem/bmss-trade"`
-   - `github_branch` — `"main"` (leave as-is)
-3. Export both ALM Product Export CSVs from the ALM portal each Monday before 9am and save them to your Downloads folder. The filenames must match the pattern:
-   `ProductExport_<8-digit-ALM-code>-user_DD-MM-YY HH-MM-SS.csv`
-   - BM account code: **4420**
-   - DC account code: **2088**
+**Two steps. No terminal. No git. No GitHub account.**
 
-That is the entire setup. No terminal, no git, no command line.
+**Step A — Get a token from Khiem.**
+Ask Khiem to send you a GitHub access token (a short string starting with `github_pat_` or `ghp_`). He generates this from his GitHub account — it takes him 2 minutes. You just need to receive it (e.g. via WhatsApp or email).
+
+**Step B — Drop the token into Cowork.**
+Import this `bmss-trade` folder into Cowork, then type exactly this into the chat:
+
+> *"Set up my GitHub config using this token: [paste the token Khiem sent]"*
+
+Cowork will create `scripts/config.json` for you automatically. The repo, branch, and everything else are already pre-filled — the token is the only thing that changes per person.
+
+**Step C — Export CSVs on Monday mornings.**
+Before the scheduled task runs each Monday, export both pricelists from the ALM portal and save them to your Downloads folder. The filenames must match this pattern exactly:
+`ProductExport_<8-digit-ALM-code>-user_DD-MM-YY HH-MM-SS.csv`
+- BM account code: **4420**
+- DC account code: **2088**
+
+That is the entire setup.
 
 ---
 
@@ -177,7 +184,7 @@ That is the entire setup. No terminal, no git, no command line.
 
 You are running an automated weekly task. Do not ask clarifying questions — execute all steps in order.
 
-**Context:** This is the bmss-trade project folder. It contains a React dashboard comparing BM (ALM account 4420) and DC (ALM account 2088) pricelists. The data lives in `src/data.json` and is regenerated each week from two ALM Product Export CSVs.
+**Context:** The selected workspace folder IS the bmss-trade project. It contains a React dashboard comparing BM (ALM account 4420) and DC (ALM account 2088) pricelists. The data lives in `src/data.json` and is regenerated each week from two ALM Product Export CSVs. GitHub credentials are stored in `scripts/config.json` (already configured — repo: kh1emnguyen/bmss-trade, branch: main).
 
 **Step 1 — Locate the CSV exports.**
 Look in the user's Downloads folder for the two most-recent files matching this pattern:
