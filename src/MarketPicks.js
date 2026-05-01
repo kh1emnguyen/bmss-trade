@@ -152,7 +152,16 @@ const CATEGORY_BRIEFS = [
   },
 ];
 
-export default function MarketPicks({ rows }) {
+function calcDiscPrice(r, params) {
+  if (r.category !== 'WINE') return null;
+  const d1 = parseFloat(params.d1) || 1;
+  const d2 = parseFloat(params.d2) || 1;
+  const m1 = parseFloat(params.m1) || 1;
+  const m2 = parseFloat(params.m2) || 1;
+  return (r.dc * r.cs) / d1 / d2 * m1 * m2;
+}
+
+export default function MarketPicks({ rows, formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
   const [selected, setSelected] = useState('WINE');
   const [priceBand, setPriceBand] = useState('');
 
@@ -277,19 +286,4 @@ export default function MarketPicks({ rows }) {
                         {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
                       </td>
                       <td className="num col-disc">
-                        {p.category === 'WINE' ? fmt2(p.disc_price) : <span style={{ color: '#9ca3af' }}>—</span>}
-                      </td>
-                      <td className="num" style={{ color: '#047857', fontWeight: 600 }}>
-                        {fmt2(p.sv_carton)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+                        {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af
