@@ -55,14 +55,7 @@ git push -u origin main
 
 ## Discount Price formula
 
-```
-Discount Price = DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05  ≈  DC × 0.847
-```
+The Disc Price column (WINE only) is computed **live in the browser** from a four-input formula panel visible only to the operator — it is hidden when exporting to PDF. The default parameters:
 
-Strips GST + 29% wholesale markup, layers 14.5% trade margin + 5% buffer.
-
-## Deploy
-
-```bash
-npm run build      # outputs build/ folder for static hosting
-```
+| Param | Default | Role |
+|-------|-------
