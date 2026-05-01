@@ -4,7 +4,16 @@ import { PREMIUM_BANDS, VOLUME_BANDS, passesPriceBand } from './pricing';
 
 const PAGE = 100;
 
-export default function OpportunitiesPage({ rows, printing = false }) {
+function calcDiscPrice(r, params) {
+  if (r.category !== 'WINE') return null;
+  const d1 = parseFloat(params.d1) || 1;
+  const d2 = parseFloat(params.d2) || 1;
+  const m1 = parseFloat(params.m1) || 1;
+  const m2 = parseFloat(params.m2) || 1;
+  return (r.dc * r.cs) / d1 / d2 * m1 * m2;
+}
+
+export default function OpportunitiesPage({ rows, printing = false, formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [sub, setSub] = useState('');
@@ -89,7 +98,7 @@ export default function OpportunitiesPage({ rows, printing = false }) {
     <div className="section">
       <h2>All SKUs — {rows.length.toLocaleString()} matched lines</h2>
       <div className="formula-callout">
-        Highlighted columns: <b>Diff %</b> (DC vs BM — sorted by largest discount in DC's favour by default) and <b>Disc Price</b> (DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05). The Disc Price formula's 29% wholesale markup is wine-specific, so the column shows a value <b>only for WINE rows</b>; everything else displays "—".
+        Highlighted columns: <b>Diff %</b> (DC vs BM — sorted by largest discount in DC's favour by default) and <b>Disc Price</b> (applied margin, WINE only). The Disc Price column shows a value <b>only for WINE rows</b>; everything else displays "—".
       </div>
 
       <div className="filter-row">
@@ -170,20 +179,9 @@ export default function OpportunitiesPage({ rows, printing = false }) {
                   {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
                 </td>
                 <td className="num col-disc">
-                  {p.category === 'WINE' ? fmt2(p.disc_price) : <span style={{ color: '#9ca3af' }}>—</span>}
+                  {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af' }}>—</span>}
                 </td>
                 <td className="num">{p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}</td>
                 <td className="num" style={{ color: '#047857', fontWeight: 600 }}>{fmt2(p.sv_carton)}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!printing && shown < filtered.length && (
-        <button className="load-more" onClick={() => setShown((s) => s + PAGE)}>
-          Load more… ({(filtered.length - shown).toLocaleString()} remaining)
-        </button>
-      )}
-    </div>
-  );
-}
+         
