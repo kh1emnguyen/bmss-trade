@@ -14,6 +14,17 @@ function calcDiscPrice(r, params) {
 export default function CategoryDrillDown({ rows, formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
   const [path, setPath] = useState({ category: null, subcategory: null });
   const [priceBand, setPriceBand] = useState('');
+  const [q, setQ] = useState('');
+
+  // Navigate helpers that also clear the search
+  const goToCategory = (cat) => { setPath({ category: cat, subcategory: null }); setQ(''); setPriceBand(''); };
+  const goToSubcat   = (sub) => { setPath((p) => ({ ...p, subcategory: sub })); setQ(''); setPriceBand(''); };
+  const goBack       = (level) => {
+    if (level === 'root') setPath({ category: null, subcategory: null });
+    else setPath((p) => ({ ...p, subcategory: null }));
+    setQ('');
+    setPriceBand('');
+  };
 
   const categoryNodes = useMemo(() => {
     const by = new Map();
@@ -58,8 +69,7 @@ export default function CategoryDrillDown({ rows, formulaParams = { d1: '1.1', d
 
   const products = useMemo(() => {
     if (!path.category || !path.subcategory) return [];
-    let out = rows
-      .filter((r) => r.category === path.category && r.subcategory === path.subcategory);
+    let out = rows.filter((r) => r.category === path.category && r.subcategory === path.subcategory);
     if (priceBand) {
       const band = bandById(priceBand);
       if (band) out = out.filter((r) => r.bm >= band.min && r.bm < band.max);
@@ -67,18 +77,33 @@ export default function CategoryDrillDown({ rows, formulaParams = { d1: '1.1', d
     return out.sort((a, b) => b.sv_carton - a.sv_carton);
   }, [rows, path, priceBand]);
 
+  // ── Level 1: category tiles ──────────────────────────────────────────────
   if (!path.category) {
-    const maxSv = Math.max(...categoryNodes.map((c) => c.sv), 1);
+    const term = q.trim().toLowerCase();
+    const visible = term
+      ? categoryNodes.filter((c) => c.name.toLowerCase().includes(term))
+      : categoryNodes;
+    const maxSv = Math.max(...visible.map((c) => c.sv), 1);
     return (
       <div className="section">
         <h2>Step 1 — Pick a category</h2>
         <div className="subtitle">Sorted by total per-carton savings (highest → lowest).</div>
+        <div className="filter-row">
+          <input
+            type="search"
+            placeholder="Search categories…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {q && <button className="clear-btn" onClick={() => setQ('')}>Clear</button>}
+          <span className="count-info">{visible.length} of {categoryNodes.length} categories</span>
+        </div>
         <div className="node-grid">
-          {categoryNodes.map((c) => (
+          {visible.map((c) => (
             <button
               key={c.name}
               className="node"
-              onClick={() => setPath({ category: c.name, subcategory: null })}
+              onClick={() => goToCategory(c.name)}
             >
               <div className="node-title">{safeStr(c.name)}</div>
               <div className="node-meta">
@@ -100,19 +125,34 @@ export default function CategoryDrillDown({ rows, formulaParams = { d1: '1.1', d
     );
   }
 
+  // ── Level 2: sub-category tiles ──────────────────────────────────────────
   if (!path.subcategory) {
-    const maxSv = Math.max(...subcatNodes.map((c) => c.sv), 1);
+    const term = q.trim().toLowerCase();
+    const visible = term
+      ? subcatNodes.filter((s) => s.name.toLowerCase().includes(term))
+      : subcatNodes;
+    const maxSv = Math.max(...visible.map((c) => c.sv), 1);
     return (
       <div className="section">
-        <Breadcrumb path={path} setPath={setPath} />
+        <Breadcrumb path={path} goBack={goBack} />
         <h2>Step 2 — Pick a sub-category in {safeStr(path.category)}</h2>
         <div className="subtitle">Sorted by total per-carton savings (highest → lowest).</div>
+        <div className="filter-row">
+          <input
+            type="search"
+            placeholder="Search sub-categories…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {q && <button className="clear-btn" onClick={() => setQ('')}>Clear</button>}
+          <span className="count-info">{visible.length} of {subcatNodes.length} sub-categories</span>
+        </div>
         <div className="node-grid">
-          {subcatNodes.map((s) => (
+          {visible.map((s) => (
             <button
               key={s.name}
               className="node"
-              onClick={() => setPath({ ...path, subcategory: s.name })}
+              onClick={() => goToSubcat(s.name)}
             >
               <div className="node-title">{safeStr(s.name)}</div>
               <div className="node-meta">
@@ -134,72 +174,17 @@ export default function CategoryDrillDown({ rows, formulaParams = { d1: '1.1', d
     );
   }
 
+  // ── Level 3: product table ───────────────────────────────────────────────
+  const term = q.trim().toLowerCase();
+  const filteredProducts = term
+    ? products.filter((p) => (safeStr(p.desc) + ' ' + safeStr(p.supplier)).toLowerCase().includes(term))
+    : products;
+
   const bands = bandsForCategory(path.category);
   return (
     <div className="section">
-      <Breadcrumb path={path} setPath={setPath} />
-      <h2>{safeStr(path.subcategory)} — {products.length} SKUs</h2>
+      <Breadcrumb path={path} goBack={goBack} />
+      <h2>{safeStr(path.subcategory)} — {filteredProducts.length}{filteredProducts.length !== products.length ? ` of ${products.length}` : ''} SKUs</h2>
       <div className="formula-callout">
         Highlighted columns: <b>Diff %</b> (DC vs BM) and <b>Disc Price</b> (applied margin). Disc Price is shown <b>only for WINE rows</b>.
-      </div>
-      <div className="filter-row">
-        <select value={priceBand} onChange={(e) => setPriceBand(e.target.value)} title="Per-unit price band">
-          <option value="">Any unit price</option>
-          {bands.map((b) => (
-            <option key={b.id} value={b.id}>{b.label}</option>
-          ))}
-        </select>
-        {priceBand && (
-          <button className="clear-btn" onClick={() => setPriceBand('')}>Clear price</button>
-        )}
-        <span className="count-info">{products.length} SKUs</span>
-      </div>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th className="num">CS</th>
-              <th className="num">BM $</th>
-              <th className="num">DC $</th>
-              <th className="num col-pct">Diff %</th>
-              <th className="num col-disc">Disc Price</th>
-              <th className="num">Save / Carton</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.code}>
-                <td>
-                  <div className="desc">{safeStr(p.desc).trim() || '—'}</div>
-                  <div className="supplier">{safeStr(p.supplier)}</div>
-                </td>
-                <td className="num">{p.cs}</td>
-                <td className="num">{fmt2(p.bm)}</td>
-                <td className="num">{fmt2(p.dc)}</td>
-                <td className={'num pct col-pct ' + pctClass(p.diff_pct)}>
-                  {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
-                </td>
-                <td className="num col-disc">
-                  {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af' }}>—</span>}
-                </td>
-                <td className="num" style={{ color: '#047857', fontWeight: 600 }}>
-                  {fmt2(p.sv_carton)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function Breadcrumb({ path, setPath }) {
-  return (
-    <div className="breadcrumb">
-      <button onClick={() => setPath({ category: null, subcategory: null })}>All categories</button>
-      <span className="sep">›</span>
-      {path.subcategory ? (
-        <>
-          <button onClick={() => setPath({ category: path.category, subcategory: 
+ 
