@@ -138,7 +138,7 @@ const CATEGORY_BRIEFS = [
     insight: (
       <>
         RTDs (ready-to-drinks) have limited established demand outside the urban under-30 segment. The market
-        gravitates to <b>globally-recognised pre-mixes</b> — Smirnoff Ice, Jack Daniel's & Cola, Jim Beam & Cola.
+        gravitates to <b>globally-recognised pre-mixes</b> — Smirnoff Ice, Jack Daniel's &amp; Cola, Jim Beam &amp; Cola.
         Smaller-format or craft RTDs don't translate. Treat as a top-up category alongside spirits orders rather
         than a primary import line.
       </>
@@ -164,6 +164,7 @@ function calcDiscPrice(r, params) {
 export default function MarketPicks({ rows, formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
   const [selected, setSelected] = useState('WINE');
   const [priceBand, setPriceBand] = useState('');
+  const [q, setQ] = useState('');
 
   const briefs = useMemo(
     () =>
@@ -180,14 +181,26 @@ export default function MarketPicks({ rows, formulaParams = { d1: '1.1', d2: '1.
   );
 
   const current = briefs.find((b) => b.category === selected) || briefs[0];
+
   const visiblePicks = useMemo(() => {
     if (!current) return [];
-    if (!priceBand) return current.picks;
-    const band = bandById(priceBand);
-    if (!band) return current.picks;
-    return current.picks.filter((r) => r.bm >= band.min && r.bm < band.max);
-  }, [current, priceBand]);
+    let out = current.picks;
+    if (priceBand) {
+      const band = bandById(priceBand);
+      if (band) out = out.filter((r) => r.bm >= band.min && r.bm < band.max);
+    }
+    if (q.trim()) {
+      const term = q.trim().toLowerCase();
+      out = out.filter((r) =>
+        (safeStr(r.desc) + ' ' + safeStr(r.supplier)).toLowerCase().includes(term)
+      );
+    }
+    return out;
+  }, [current, priceBand, q]);
+
   const currentBands = current ? bandsForCategory(current.category) : [];
+
+  const hasFilters = priceBand || q.trim();
 
   return (
     <div className="section">
@@ -203,7 +216,7 @@ export default function MarketPicks({ rows, formulaParams = { d1: '1.1', d2: '1.
           <button
             key={b.category}
             className={'market-node' + (b.category === selected ? ' selected' : '')}
-            onClick={() => { setSelected(b.category); setPriceBand(''); }}
+            onClick={() => { setSelected(b.category); setPriceBand(''); setQ(''); }}
           >
             <span className={'market-priority ' + b.priority}>
               {b.priority === 'high' ? 'Lead category' : b.priority === 'medium' ? 'Secondary' : 'Top-up only'}
@@ -234,27 +247,37 @@ export default function MarketPicks({ rows, formulaParams = { d1: '1.1', d2: '1.
           <div className="market-prose">{current.insight}</div>
 
           <div className="picks-heading">
-            Emphasized SKUs ({visiblePicks.length}{current.picks.length ? '' : ' — broaden the curation rule'}
-            {priceBand && current.picks.length !== visiblePicks.length ? ` of ${current.picks.length}` : ''})
+            Emphasized SKUs ({visiblePicks.length}
+            {current.picks.length === 0 ? ' — broaden the curation rule' : ''}
+            {hasFilters && current.picks.length !== visiblePicks.length ? ` of ${current.picks.length}` : ''})
           </div>
 
           <div className="filter-row">
+            <input
+              type="search"
+              placeholder="Search description, supplier…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
             <select value={priceBand} onChange={(e) => setPriceBand(e.target.value)} title="Per-unit price band">
               <option value="">Any unit price</option>
               {currentBands.map((b) => (
                 <option key={b.id} value={b.id}>{b.label}</option>
               ))}
             </select>
-            {priceBand && (
-              <button className="clear-btn" onClick={() => setPriceBand('')}>Clear price</button>
+            {hasFilters && (
+              <button className="clear-btn" onClick={() => { setPriceBand(''); setQ(''); }}>Clear</button>
             )}
+            <span className="count-info">
+              {visiblePicks.length} of {current.picks.length} picks
+            </span>
           </div>
 
           {visiblePicks.length === 0 ? (
             <div style={{ fontSize: 13, color: '#6b7280' }}>
               {current.picks.length === 0
                 ? 'No SKUs matched the curated rule for this category in the current dataset. Use Tab 1 (All SKUs) to filter manually.'
-                : 'No picks fall in the selected price band. Pick a different band or clear the filter.'}
+                : 'No picks match the current filters. Try clearing the search or price band.'}
             </div>
           ) : (
             <div className="table-wrap">
@@ -276,14 +299,4 @@ export default function MarketPicks({ rows, formulaParams = { d1: '1.1', d2: '1.
                       <td>
                         <div className="desc">{safeStr(p.desc).trim() || '—'}</div>
                         <div className="supplier">
-                          {safeStr(p.supplier)} · {safeStr(p.subcategory)}
-                        </div>
-                      </td>
-                      <td className="num">{p.cs}</td>
-                      <td className="num">{fmt2(p.bm)}</td>
-                      <td className="num">{fmt2(p.dc)}</td>
-                      <td className={'num pct col-pct ' + pctClass(p.diff_pct)}>
-                        {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
-                      </td>
-                      <td className="num col-disc">
-                        {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af
+                          {
