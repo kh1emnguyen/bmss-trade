@@ -12,18 +12,6 @@ export default function App() {
   const [printing, setPrinting] = useState(false);
   const printTimestamp = useRef('');
 
-  // ── Formula panel state (your eyes only — hidden in PDF) ──────────────────
-  const [formulaParams, setFormulaParams] = useState({ d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' });
-  const setParam = (key) => (e) => setFormulaParams((p) => ({ ...p, [key]: e.target.value }));
-  const netMultiplier = useMemo(() => {
-    const d1 = parseFloat(formulaParams.d1) || 1;
-    const d2 = parseFloat(formulaParams.d2) || 1;
-    const m1 = parseFloat(formulaParams.m1) || 1;
-    const m2 = parseFloat(formulaParams.m2) || 1;
-    return (m1 * m2 / d1 / d2).toFixed(4);
-  }, [formulaParams]);
-
-  // Listen for browser afterprint event to restore normal state.
   useEffect(() => {
     const handler = () => setPrinting(false);
     window.addEventListener('afterprint', handler);
@@ -35,14 +23,22 @@ export default function App() {
       dateStyle: 'medium', timeStyle: 'short',
     });
     setPrinting(true);
-    // Two animation frames: first lets React re-render with all rows,
-    // second lets the browser paint, then we open the print dialog.
     requestAnimationFrame(() =>
       requestAnimationFrame(() => window.print())
     );
   };
 
-  // Defensive: ensure data is an array of well-shaped rows.
+  // Formula panel state — your eyes only, hidden in PDF
+  const [formulaParams, setFormulaParams] = useState({ d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' });
+  const setParam = (key) => (e) => setFormulaParams((p) => ({ ...p, [key]: e.target.value }));
+  const netMultiplier = useMemo(() => {
+    const d1 = parseFloat(formulaParams.d1) || 1;
+    const d2 = parseFloat(formulaParams.d2) || 1;
+    const m1 = parseFloat(formulaParams.m1) || 1;
+    const m2 = parseFloat(formulaParams.m2) || 1;
+    return (m1 * m2 / d1 / d2).toFixed(4);
+  }, [formulaParams]);
+
   const rows = useMemo(() => {
     const src = Array.isArray(data) ? data : [];
     return src.map((r) => ({
@@ -63,9 +59,7 @@ export default function App() {
 
   const summary = useMemo(() => {
     const total = rows.length;
-    if (!total) {
-      return { total: 0, cheaper: 0, avgDisc: 0, totalSave: 0, top: null, cats: 0 };
-    }
+    if (!total) return { total: 0, cheaper: 0, avgDisc: 0, totalSave: 0, top: null, cats: 0 };
     const cheaper = rows.filter((r) => r.diff_pct < 0).length;
     const avgDisc = rows.reduce((s, r) => s + r.diff_pct, 0) / total;
     const totalSave = rows.reduce((s, r) => s + r.sv_carton, 0);
@@ -88,13 +82,11 @@ export default function App() {
         </button>
       </div>
 
-      {/* Shown only in print — timestamp + active tab label */}
       <div className="print-meta">
         <span>BMSS Trade Dashboard — {TAB_LABELS[tab]}</span>
         <span>Exported {printTimestamp.current}</span>
       </div>
 
-      {/* ── Formula panel — your eyes only, hidden in PDF export ───────────── */}
       <div className="formula-panel">
         <div className="formula-panel-label">
           Disc Price formula
@@ -141,4 +133,40 @@ export default function App() {
           <div className="value">{summary.avgDisc.toFixed(1)}%</div>
           <div className="sub">structural account-tier gap</div>
         </div>
-        <div className="summ
+        <div className="summary-card">
+          <div className="label">Total save / carton</div>
+          <div className="value">{fmtMoney(summary.totalSave)}</div>
+          <div className="sub">summed across all qualifying SKUs</div>
+        </div>
+      </div>
+
+      <div className="tabs">
+        <button className={'tab' + (tab === 'all' ? ' active' : '')} onClick={() => setTab('all')}>
+          1 · All SKUs
+        </button>
+        <button className={'tab' + (tab === 'categories' ? ' active' : '')} onClick={() => setTab('categories')}>
+          2 · Category Drill-Down
+        </button>
+        <button className={'tab' + (tab === 'market' ? ' active' : '')} onClick={() => setTab('market')}>
+          3 · Trade Opportunities
+        </button>
+      </div>
+
+      {tab === 'all' && <OpportunitiesPage rows={rows} printing={printing} formulaParams={formulaParams} />}
+      {tab === 'categories' && <CategoryDrillDown rows={rows} printing={printing} formulaParams={formulaParams} />}
+      {tab === 'market' && <MarketPicks rows={rows} printing={printing} formulaParams={formulaParams} />}
+
+      <div className="methodology">
+        <b>Methodology.</b> Unit price = Carton Cost (incl. taxes + allowance) ÷ Carton Size.
+        SKUs matched by exact Item Code across both pricelists. Filters: DC unit price ≤ BM × 1.05
+        (DC cheaper, at par, or up to 5% pricier); ≥ $10/unit on WINE and SPIRITS only; ALM Warehouse rows only.
+        Save / carton = (BM − DC) × DC carton size.
+        <br /><br />
+        <b>Discount Price.</b> Configurable via the formula panel above (hidden in PDF export). Adjust the four
+        multipliers to reflect current GST, wholesale markup, trade margin, and buffer. The column is shown{' '}
+        <b>only for WINE rows</b>; spirits, beer, cider, RTDs, and liqueurs use different markup structures
+        and are not comparable through the same formula.
+      </div>
+    </div>
+  );
+}
