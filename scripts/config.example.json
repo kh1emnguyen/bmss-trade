@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy this file to scripts/config.json and fill in your values. config.json is gitignored — it will never be committed.",
+  "github_token": "ghp_YOUR_FINE_GRAINED_PAT_HERE",
+  "github_repo": "YOUR-USERNAME/bmss-trade",
+  "github_branch": "main"
+}

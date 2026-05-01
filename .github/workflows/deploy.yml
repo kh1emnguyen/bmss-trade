@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────
+# BMSS Trade — Auto-deploy to GitHub Pages on every push to main.
+#
+# HOW TO ENABLE (one-time setup):
+#   1. Push this repo to GitHub.
+#   2. Go to repo → Settings → Pages.
+#   3. Under "Source" select "GitHub Actions".
+#   4. That's it. Every `git push` to main will build + redeploy.
+#
+# Live URL after setup:
+#   https://<your-github-username>.github.io/<repo-name>/
+# ─────────────────────────────────────────────────────────────────
+
+name: Build & Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # lets you trigger a deploy manually from the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. Build ────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          CI: false          # treat warnings as warnings, not errors
+          # CRA reads PUBLIC_URL at build time for asset paths.
+          # Using "." in package.json "homepage" is equivalent and
+          # already set — this env var is a safety fallback.
+          PUBLIC_URL: ""
+
+      - uses: actions/configure-pages@v4
+
+      - name: Upload build artefact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  # ── 2. Deploy ───────────────────────────────────────────────────
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

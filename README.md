@@ -1,0 +1,68 @@
+# bmss-trade-v2
+
+Interactive trade opportunity dashboard comparing **BM** (BMSS / ALM 4420) and **DC** (Duncans / ALM 2088) pricelists. Two views — a category drill-down and an all-SKU table — with a baked-in **Discount Price** column quotable to trade clients. Scope: alcohol categories only (WINE, SPIRITS, RTDS, CIDER, LIQUEURS, BEER).
+
+Built on **Create React App** (matches the v1 repo layout: `public/index.html` + `src/index.js`, `.js` files throughout).
+
+## Quick start
+
+```bash
+npm install
+npm start
+```
+
+The dev server opens at <http://localhost:3000>.
+
+## File layout
+
+```
+bmss-trade-v2/
+├── package.json              react-scripts 5.0.1, React 18
+├── public/
+│   └── index.html            CRA root template
+└── src/
+    ├── index.js              Entry: ReactDOM.createRoot
+    ├── App.js                Top-level shell (summary cards, tabs)
+    ├── CategoryDrillDown.js  Page 1: Category → Sub-category → Products
+    ├── OpportunitiesPage.js  Page 2: Filterable all-SKU table
+    ├── utils.js              Defensive formatters
+    ├── styles.css            All styling
+    └── data.json             4,362 matched SKUs (precomputed)
+```
+
+## Push to GitHub
+
+After unzipping:
+
+```bash
+cd bmss-trade-v2
+git init
+git add .
+git commit -m "Initial commit: bmss-trade-v2"
+git branch -M main
+
+# Create an empty repo on github.com named bmss-trade-v2 first, then:
+git remote add origin git@github.com:<your-username>/bmss-trade-v2.git
+git push -u origin main
+```
+
+## Filter rules baked into `data.json`
+
+- ALM Warehouse rows only.
+- Matched on Item Code across both pricelists.
+- DC unit price ≤ BM × 1.05 (DC cheaper, at par, or up to 5% pricier).
+- ≥ $10/unit minimum on **WINE** and **SPIRITS** only — every other category keeps low-priced lines.
+
+## Discount Price formula
+
+```
+Discount Price = DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05  ≈  DC × 0.847
+```
+
+Strips GST + 29% wholesale markup, layers 14.5% trade margin + 5% buffer.
+
+## Deploy
+
+```bash
+npm run build      # outputs build/ folder for static hosting
+```
