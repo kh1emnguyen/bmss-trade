@@ -47,25 +47,24 @@ Final qualifying set (29-Apr-26 exports): **3,865 SKUs**.
 
 ## 4. The Discount Price formula (WINE only)
 
-The headline number quotable to trade clients:
+The Discount Price is a headline number quotable to trade clients. It is computed **client-side in the browser** using a four-parameter formula that the operator can adjust at any time via the formula panel in the app header. The formula is not exposed in PDF exports.
+
+The general structure is:
 
 ```
-Discount Price = DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05
-              ≈ DC × 0.847
+Discount Price = DC Carton ÷ D1 ÷ D2 × M1 × M2
 ```
 
-Mechanically:
-
-| Step | Operation | Reason |
+| Parameter | Default | Meaning |
 | --- | --- | --- |
-| `÷ 1.1` | Strip 10% GST off DC carton cost | DC price is GST-inclusive; export pricing is ex-GST. |
-| `÷ 1.29` | Remove the standard 29% wholesale markup | Back out the markup baked into the ALM-listed price. |
-| `× 1.145` | Apply 14.5% trade margin | Margin on the export deal. |
-| `× 1.05` | Apply 5% buffer | Handles freight/FX/disputes. |
+| D1 | 1.1 | Strip GST (DC price is GST-inclusive; export pricing is ex-GST) |
+| D2 | 1.29 | Strip wholesale markup baked into the ALM-listed price |
+| M1 | 1.145 | Apply trade margin |
+| M2 | 1.05 | Apply buffer (freight / FX / disputes) |
 
-Net result: the export quote sits at **~85% of the DC purchase price**.
+The operator can change any of the four values in-app to reflect current deal terms. The updated Disc Price recalculates instantly across all tabs.
 
-**Important — wine only.** The 29% wholesale markup is wine-specific. Spirits, liqueurs, beer, cider, and RTDs use different markup structures (and different excise treatments — beer/cider/RTDs are subject to volumetric excise, spirits to a separate per-LAL rate). The Discount Price column therefore shows a value **only for WINE rows**; all other categories display "—". If trade pricing is needed for the non-wine categories, build a separate formula that reflects their actual cost structure.
+**Important — wine only.** The formula assumes a wine-specific 29% wholesale markup (D2 default). Spirits, liqueurs, beer, cider, and RTDs use different markup structures and excise treatments. The Discount Price column therefore shows a value **only for WINE rows**; all other categories display "—". If trade pricing is needed for non-wine categories, a separate formula reflecting their cost structure would need to be built.
 
 ## 5. The React app — three tabs
 
@@ -111,7 +110,7 @@ Hand the partner two new ALM Product Export CSVs (one per account) and ask Claud
 3. Match by Item Code, keep lines where `DC ≤ BM × 1.05`.
 4. Drop wine/spirits lines under $10/unit.
 5. Restrict to categories: WINE, SPIRITS, RTDS, CIDER, LIQUEURS, BEER.
-6. Compute `disc_price = DC / 1.1 / 1.29 * 1.145 * 1.05`.
+6. Compute `disc_price = DC / D1 / D2 * M1 * M2` using the current formula panel values (defaults: D1=1.1, D2=1.29, M1=1.145, M2=1.05). Note: disc_price in data.json is stored with defaults; the live app always recalculates client-side from the panel inputs.
 7. Compute `sv_carton = (BM − DC) × DC.carton_size`.
 8. Output the same JSON shape (one row per SKU with: code, desc, supplier, category, subcategory, cs, bm, dc, diff_pct, diff_abs, sv_carton, disc_price) and overwrite `src/data.json`.
 
@@ -202,13 +201,4 @@ This script auto-detects the CSVs, applies all filter rules (ALM Warehouse rows 
 
 **Step 3 — Log the result.**
 Append a single line to `scripts/refresh-log.txt` in this format:
-`YYYY-MM-DD HH:MM | OK | <N> SKUs | BM file: <filename> | DC file: <filename>`
-or on failure:
-`YYYY-MM-DD HH:MM | FAILED | <reason>`
-
-**Step 4 — Done.**
-The GitHub Actions workflow will pick up the push and redeploy the live app within ~2 minutes. No further action needed.
-
----
-
-*End of scheduled task prompt.*
+`YYYY-MM
