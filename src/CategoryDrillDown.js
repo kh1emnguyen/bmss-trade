@@ -2,7 +2,16 @@ import React, { useMemo, useState } from 'react';
 import { fmtMoney, fmt2, pctClass, safeStr } from './utils';
 import { bandsForCategory, bandById } from './pricing';
 
-export default function CategoryDrillDown({ rows }) {
+function calcDiscPrice(r, params) {
+  if (r.category !== 'WINE') return null;
+  const d1 = parseFloat(params.d1) || 1;
+  const d2 = parseFloat(params.d2) || 1;
+  const m1 = parseFloat(params.m1) || 1;
+  const m2 = parseFloat(params.m2) || 1;
+  return (r.dc * r.cs) / d1 / d2 * m1 * m2;
+}
+
+export default function CategoryDrillDown({ rows, formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
   const [path, setPath] = useState({ category: null, subcategory: null });
   const [priceBand, setPriceBand] = useState('');
 
@@ -131,7 +140,7 @@ export default function CategoryDrillDown({ rows }) {
       <Breadcrumb path={path} setPath={setPath} />
       <h2>{safeStr(path.subcategory)} — {products.length} SKUs</h2>
       <div className="formula-callout">
-        Highlighted columns: <b>Diff %</b> (DC vs BM) and <b>Disc Price</b> (= DC ÷ 1.1 ÷ 1.29 × 1.145 × 1.05). Disc Price is shown <b>only for WINE rows</b> — the formula's 29% wholesale markup is wine-specific.
+        Highlighted columns: <b>Diff %</b> (DC vs BM) and <b>Disc Price</b> (applied margin). Disc Price is shown <b>only for WINE rows</b>.
       </div>
       <div className="filter-row">
         <select value={priceBand} onChange={(e) => setPriceBand(e.target.value)} title="Per-unit price band">
@@ -172,7 +181,7 @@ export default function CategoryDrillDown({ rows }) {
                   {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
                 </td>
                 <td className="num col-disc">
-                  {p.category === 'WINE' ? fmt2(p.disc_price) : <span style={{ color: '#9ca3af' }}>—</span>}
+                  {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af' }}>—</span>}
                 </td>
                 <td className="num" style={{ color: '#047857', fontWeight: 600 }}>
                   {fmt2(p.sv_carton)}
@@ -193,15 +202,4 @@ function Breadcrumb({ path, setPath }) {
       <span className="sep">›</span>
       {path.subcategory ? (
         <>
-          <button onClick={() => setPath({ category: path.category, subcategory: null })}>
-            {safeStr(path.category)}
-          </button>
-          <span className="sep">›</span>
-          <span className="current">{safeStr(path.subcategory)}</span>
-        </>
-      ) : (
-        <span className="current">{safeStr(path.category)}</span>
-      )}
-    </div>
-  );
-}
+          <button onClick={() => setPath({ category: path.category, subcategory: 
