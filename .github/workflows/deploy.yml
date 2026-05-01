@@ -12,7 +12,7 @@ name: Build & Deploy to GitHub Pages
 on:
   push:
     branches: [main]
-  workflow_dispatch: # lets you trigger a deploy manually from the Actions tab
+  workflow_dispatch: # trigger manually from the Actions tab if needed
 
 permissions:
   contents: read
@@ -33,28 +33,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install dependencies
-        # react-scripts 5.x has peer-dep conflicts with Node 20's strict resolver.
-        # --legacy-peer-deps restores npm 6 behaviour and resolves the conflict.
-        run: npm install --legacy-peer-deps
+        # Fresh install — removes stale lock file from old react-scripts setup
+        # so Vite's dependency tree resolves cleanly.
+        run: rm -f package-lock.json && npm install
 
       - name: Build
         run: npm run build
-        env:
-          CI: false          # treat warnings as warnings, not errors
-          # CRA reads PUBLIC_URL at build time for asset paths.
-          # Using "." in package.json "homepage" is equivalent and
-          # already set — this env var is a safety fallback.
-          PUBLIC_URL: ""
+        # Vite outputs to dist/. base='./' in vite.config.js ensures
+        # asset paths are relative, which GitHub Pages requires.
 
       - uses: actions/configure-pages@v4
 
       - name: Upload build artefact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build
+          path: dist
 
   # ── 2. Deploy ───────────────────────────────────────────────────
   deploy:

@@ -11,7 +11,7 @@ export default function OpportunitiesPage({ rows, printing = false }) {
   const [discFilter, setDiscFilter] = useState('');
   const [priceBand, setPriceBand] = useState('');
   const [sortKey, setSortKey] = useState('diff_pct');
-  const [sortDir, setSortDir] = useState('asc'); // most negative first = biggest DC discount
+  const [sortDir, setSortDir] = useState('asc');
   const [shown, setShown] = useState(PAGE);
 
   const cats = useMemo(
@@ -82,11 +82,7 @@ export default function OpportunitiesPage({ rows, printing = false }) {
   };
 
   const onClear = () => {
-    setQ('');
-    setCat('');
-    setSub('');
-    setDiscFilter('');
-    setPriceBand('');
+    setQ(''); setCat(''); setSub(''); setDiscFilter(''); setPriceBand('');
   };
 
   return (
@@ -103,39 +99,21 @@ export default function OpportunitiesPage({ rows, printing = false }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <select
-          value={cat}
-          onChange={(e) => {
-            setCat(e.target.value);
-            setSub('');
-          }}
-        >
+        <select value={cat} onChange={(e) => { setCat(e.target.value); setSub(''); }}>
           <option value="">All categories</option>
-          {cats.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
+          {cats.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select value={sub} onChange={(e) => setSub(e.target.value)}>
           <option value="">All sub-categories</option>
-          {subs.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
+          {subs.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={priceBand} onChange={(e) => setPriceBand(e.target.value)} title="Per-unit price band">
           <option value="">Any unit price</option>
           <optgroup label="Wine, Spirits, Liqueurs">
-            {PREMIUM_BANDS.map((b) => (
-              <option key={b.id} value={b.id}>{b.label}</option>
-            ))}
+            {PREMIUM_BANDS.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
           </optgroup>
           <optgroup label="Beer, Cider, RTDs">
-            {VOLUME_BANDS.map((b) => (
-              <option key={b.id} value={b.id}>{b.label}</option>
-            ))}
+            {VOLUME_BANDS.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
           </optgroup>
         </select>
         <select value={discFilter} onChange={(e) => setDiscFilter(e.target.value)}>
@@ -145,15 +123,12 @@ export default function OpportunitiesPage({ rows, printing = false }) {
           <option value="mild">0–15% off</option>
           <option value="parity">Parity to +5%</option>
         </select>
-        <button className="clear-btn" onClick={onClear}>
-          Clear
-        </button>
+        <button className="clear-btn" onClick={onClear}>Clear</button>
         <span className="count-info">
           {filtered.length.toLocaleString()} of {rows.length.toLocaleString()} lines
         </span>
       </div>
 
-      {/* Print-only filter summary — shows active filters in the PDF header */}
       {printing && (
         <div className="print-filter-summary">
           {cat && <span>Category: {cat}</span>}
@@ -181,18 +156,13 @@ export default function OpportunitiesPage({ rows, printing = false }) {
             </tr>
           </thead>
           <tbody>
-            {/* When printing: render ALL filtered rows (bypass pagination). */}
             {filtered.slice(0, printing ? filtered.length : shown).map((p) => (
               <tr key={p.code}>
                 <td>
                   <div className="desc">{safeStr(p.desc).trim() || '—'}</div>
-                  <div className="supplier">
-                    {safeStr(p.supplier)} · {safeStr(p.subcategory)}
-                  </div>
+                  <div className="supplier">{safeStr(p.supplier)} · {safeStr(p.subcategory)}</div>
                 </td>
-                <td>
-                  <span className="cat-tag">{safeStr(p.category)}</span>
-                </td>
+                <td><span className="cat-tag">{safeStr(p.category)}</span></td>
                 <td className="num">{p.cs}</td>
                 <td className="num">{fmt2(p.bm)}</td>
                 <td className="num">{fmt2(p.dc)}</td>
@@ -202,12 +172,8 @@ export default function OpportunitiesPage({ rows, printing = false }) {
                 <td className="num col-disc">
                   {p.category === 'WINE' ? fmt2(p.disc_price) : <span style={{ color: '#9ca3af' }}>—</span>}
                 </td>
-                <td className="num">
-                  {p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}
-                </td>
-                <td className="num" style={{ color: '#047857', fontWeight: 600 }}>
-                  {fmt2(p.sv_carton)}
-                </td>
+                <td className="num">{p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}</td>
+                <td className="num" style={{ color: '#047857', fontWeight: 600 }}>{fmt2(p.sv_carton)}</td>
               </tr>
             ))}
           </tbody>
