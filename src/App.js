@@ -10,18 +10,31 @@ const TAB_LABELS = { all: '1 · All SKUs', categories: '2 · Category Drill-Down
 export default function App() {
   const [tab, setTab] = useState('all');
   const [printing, setPrinting] = useState(false);
+  const [printMode, setPrintMode] = useState('database'); // 'database' | 'quotation'
   const printTimestamp = useRef('');
 
   useEffect(() => {
-    const handler = () => setPrinting(false);
+    const handler = () => { setPrinting(false); setPrintMode('database'); };
     window.addEventListener('afterprint', handler);
     return () => window.removeEventListener('afterprint', handler);
   }, []);
 
-  const handleExportPdf = () => {
+  const handleExportDatabase = () => {
     printTimestamp.current = new Date().toLocaleString('en-AU', {
       dateStyle: 'medium', timeStyle: 'short',
     });
+    setPrintMode('database');
+    setPrinting(true);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => window.print())
+    );
+  };
+
+  const handleExportQuotation = () => {
+    printTimestamp.current = new Date().toLocaleString('en-AU', {
+      dateStyle: 'medium', timeStyle: 'short',
+    });
+    setPrintMode('quotation');
     setPrinting(true);
     requestAnimationFrame(() =>
       requestAnimationFrame(() => window.print())
@@ -77,9 +90,14 @@ export default function App() {
             All-SKU comparison · DC ≤ BM × 1.05 · ≥ $10/unit on Wine &amp; Spirits · Disc Price = configurable margin (WINE only)
           </div>
         </div>
-        <button className="btn-export" onClick={handleExportPdf} title="Export current view to PDF">
-          Export PDF
-        </button>
+        <div className="btn-export-group">
+          <button className="btn-export" onClick={handleExportDatabase} title="Export full database view to PDF">
+            Export Database
+          </button>
+          <button className="btn-export btn-quotation" onClick={handleExportQuotation} title="Export quotation snapshot (product, category, case size, discount price only)">
+            Export Quotation
+          </button>
+        </div>
       </div>
 
       <div className="print-meta">
@@ -152,9 +170,9 @@ export default function App() {
         </button>
       </div>
 
-      {tab === 'all' && <OpportunitiesPage rows={rows} printing={printing} formulaParams={formulaParams} />}
-      {tab === 'categories' && <CategoryDrillDown rows={rows} printing={printing} formulaParams={formulaParams} />}
-      {tab === 'market' && <MarketPicks rows={rows} printing={printing} formulaParams={formulaParams} />}
+      {tab === 'all' && <OpportunitiesPage rows={rows} printing={printing} printMode={printMode} formulaParams={formulaParams} />}
+      {tab === 'categories' && <CategoryDrillDown rows={rows} printing={printing} printMode={printMode} formulaParams={formulaParams} />}
+      {tab === 'market' && <MarketPicks rows={rows} printing={printing} printMode={printMode} formulaParams={formulaParams} />}
 
       <div className="methodology">
         <b>Methodology.</b> Unit price = Carton Cost (incl. taxes + allowance) ÷ Carton Size.

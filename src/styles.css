@@ -600,9 +600,13 @@ td.col-pct { font-size: 14px; }
   gap: 12px;
   margin-bottom: 0;
 }
-.btn-export {
+.btn-export-group {
+  display: flex;
   flex-shrink: 0;
+  gap: 8px;
   margin-top: 6px;
+}
+.btn-export {
   padding: 8px 16px;
   background: var(--accent);
   color: #fff;
@@ -615,6 +619,8 @@ td.col-pct { font-size: 14px; }
   transition: background 0.15s;
 }
 .btn-export:hover { background: var(--accent-strong); }
+.btn-quotation { background: #059669; }
+.btn-quotation:hover { background: #047857; }
 
 /* ── Print-only elements (hidden on screen) ────────────────────── */
 .print-meta,
@@ -646,7 +652,7 @@ td.col-pct { font-size: 14px; }
     border-radius: 4px;
     border: 1px solid #ddd;
   }
-  .btn-export,
+  .btn-export-group,
   .tabs,
   .filter-row,
   .load-more,
@@ -678,9 +684,13 @@ td.col-pct { font-size: 14px; }
   gap: 12px;
   margin-bottom: 0;
 }
-.btn-export {
+.btn-export-group {
+  display: flex;
   flex-shrink: 0;
+  gap: 8px;
   margin-top: 6px;
+}
+.btn-export {
   padding: 8px 16px;
   background: var(--accent);
   color: #fff;
@@ -693,6 +703,8 @@ td.col-pct { font-size: 14px; }
   transition: background 0.15s;
 }
 .btn-export:hover { background: var(--accent-strong); }
+.btn-quotation { background: #059669; }
+.btn-quotation:hover { background: #047857; }
 
 /* ── Print-only elements (hidden on screen) ─────────────────────────────── */
 .print-meta,
@@ -727,7 +739,7 @@ td.col-pct { font-size: 14px; }
   }
 
   /* Hide screen-only chrome */
-  .btn-export,
+  .btn-export-group,
   .tabs,
   .filter-row,
   .load-more,
@@ -765,9 +777,13 @@ td.col-pct { font-size: 14px; }
   gap: 12px;
   margin-bottom: 0;
 }
-.btn-export {
+.btn-export-group {
+  display: flex;
   flex-shrink: 0;
+  gap: 8px;
   margin-top: 6px;
+}
+.btn-export {
   padding: 8px 16px;
   background: var(--accent);
   color: #fff;
@@ -780,6 +796,8 @@ td.col-pct { font-size: 14px; }
   transition: background 0.15s;
 }
 .btn-export:hover { background: var(--accent-strong); }
+.btn-quotation { background: #059669; }
+.btn-quotation:hover { background: #047857; }
 
 /* ── Print-only elements (hidden on screen) ────────────────────── */
 .print-meta,
@@ -811,7 +829,7 @@ td.col-pct { font-size: 14px; }
     border-radius: 4px;
     border: 1px solid #ddd;
   }
-  .btn-export,
+  .btn-export-group,
   .tabs,
   .filter-row,
   .load-more,

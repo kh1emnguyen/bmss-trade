@@ -13,7 +13,8 @@ function calcDiscPrice(r, params) {
   return (r.dc * r.cs) / d1 / d2 * m1 * m2;
 }
 
-export default function OpportunitiesPage({ rows, printing = false, formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
+export default function OpportunitiesPage({ rows, printing = false, printMode = 'database', formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
+  const isQuotation = printing && printMode === 'quotation';
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [sub, setSub] = useState('');
@@ -156,12 +157,12 @@ export default function OpportunitiesPage({ rows, printing = false, formulaParam
               <Th k="desc">Product</Th>
               <Th k="category">Cat</Th>
               <Th k="cs" num>CS</Th>
-              <Th k="bm" num>BM $</Th>
-              <Th k="dc" num>DC $</Th>
-              <Th k="diff_pct" num extra="col-pct">Diff %</Th>
+              {!isQuotation && <Th k="bm" num>BM $</Th>}
+              {!isQuotation && <Th k="dc" num>DC $</Th>}
+              {!isQuotation && <Th k="diff_pct" num extra="col-pct">Diff %</Th>}
               <Th k="disc_price" num extra="col-disc">Disc Price</Th>
-              <Th k="diff_abs" num>Diff $/u</Th>
-              <Th k="sv_carton" num>Save / Carton</Th>
+              {!isQuotation && <Th k="diff_abs" num>Diff $/u</Th>}
+              {!isQuotation && <Th k="sv_carton" num>Save / Carton</Th>}
             </tr>
           </thead>
           <tbody>
@@ -169,20 +170,22 @@ export default function OpportunitiesPage({ rows, printing = false, formulaParam
               <tr key={p.code}>
                 <td>
                   <div className="desc">{safeStr(p.desc).trim() || '—'}</div>
-                  <div className="supplier">{safeStr(p.supplier)} · {safeStr(p.subcategory)}</div>
+                  {!isQuotation && <div className="supplier">{safeStr(p.supplier)} · {safeStr(p.subcategory)}</div>}
                 </td>
                 <td><span className="cat-tag">{safeStr(p.category)}</span></td>
                 <td className="num">{p.cs}</td>
-                <td className="num">{fmt2(p.bm)}</td>
-                <td className="num">{fmt2(p.dc)}</td>
-                <td className={'num pct col-pct ' + pctClass(p.diff_pct)}>
-                  {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
-                </td>
+                {!isQuotation && <td className="num">{fmt2(p.bm)}</td>}
+                {!isQuotation && <td className="num">{fmt2(p.dc)}</td>}
+                {!isQuotation && (
+                  <td className={'num pct col-pct ' + pctClass(p.diff_pct)}>
+                    {p.diff_pct > 0 ? '+' : ''}{p.diff_pct.toFixed(1)}%
+                  </td>
+                )}
                 <td className="num col-disc">
                   {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af' }}>—</span>}
                 </td>
-                <td className="num">{p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}</td>
-                <td className="num" style={{ color: '#047857', fontWeight: 600 }}>{fmt2(p.sv_carton)}</td>
+                {!isQuotation && <td className="num">{p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}</td>}
+                {!isQuotation && <td className="num" style={{ color: '#047857', fontWeight: 600 }}>{fmt2(p.sv_carton)}</td>}
               </tr>
             ))}
           </tbody>
