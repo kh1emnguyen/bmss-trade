@@ -58,4 +58,18 @@ git push -u origin main
 The Disc Price column (WINE only) is computed **live in the browser** from a four-input formula panel visible only to the operator — it is hidden when exporting to PDF. The default parameters:
 
 | Param | Default | Role |
-|-------|-------
+|-------|---------|------|
+| D1 | 1.1 | Strip GST |
+| D2 | 1.29 | Strip wholesale markup |
+| M1 | 1.145 | Trade margin |
+| M2 | 1.05 | Buffer |
+
+`Discount Price = DC Carton ÷ D1 ÷ D2 × M1 × M2`
+
+Change any value in-app; all three tabs recalculate instantly. The formula and its inputs are stripped from PDF exports.
+
+## Deploy
+
+```bash
+npm run build      # outputs build/ folder for static hosting
+```

@@ -184,4 +184,15 @@ export default function OpportunitiesPage({ rows, printing = false, formulaParam
                 <td className="num">{p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}</td>
                 <td className="num" style={{ color: '#047857', fontWeight: 600 }}>{fmt2(p.sv_carton)}</td>
               </tr>
-         
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!printing && shown < filtered.length && (
+        <button className="load-more" onClick={() => setShown((s) => s + PAGE)}>
+          Load more… ({(filtered.length - shown).toLocaleString()} remaining)
+        </button>
+      )}
+    </div>
+  );
+}

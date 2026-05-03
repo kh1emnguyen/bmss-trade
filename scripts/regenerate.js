@@ -3,7 +3,7 @@
  * regenerate.js — BMSS Trade dataset refresh + auto-publish
  *
  * ─── WHAT IT DOES ────────────────────────────────────────────────────────────
- *   1. Finds the two most-recent ALM Product Export CSVs in ~/Downloads
+ *   1. Finds the two most-recent ALM Product Export CSVs in export list/
  *      (BM = account 4420, DC = account 2088).
  *   2. Applies all filter rules from PARTNER_BRIEF.md §3–4.
  *   3. Overwrites src/data.json with the fresh dataset.
@@ -34,14 +34,14 @@
 
 const fs    = require('fs');
 const path  = require('path');
-const os    = require('os');
 const https = require('https');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-const ROOT       = path.join(__dirname, '..');
-const OUT_PATH   = path.join(ROOT, 'src', 'data.json');
+const ROOT        = path.join(__dirname, '..');
+const OUT_PATH    = path.join(ROOT, 'src', 'data.json');
 const CONFIG_PATH = path.join(__dirname, 'config.json');
+const EXPORT_DIR  = path.join(ROOT, 'export list');
 
 const ACCOUNT_BM = '4420';
 const ACCOUNT_DC = '2088';
@@ -97,7 +97,13 @@ function parseCsv(text) {
 // ─── Auto-detect CSVs from Downloads ─────────────────────────────────────────
 
 function findLatestExport(account) {
-  const dir = path.join(os.homedir(), 'Downloads');
+  // Look in the project's "export list/" subfolder (gitignored — never committed).
+  // Drop your Monday ALM exports there each week before running this script.
+  const dir = EXPORT_DIR;
+  if (!fs.existsSync(dir)) {
+    console.error(`ERROR: "${dir}" does not exist. Create the folder and drop your CSVs in it.`);
+    return null;
+  }
   // Pattern: ProductExport_<account>-user_DD-MM-YY HH-MM-SS.csv
   const re  = new RegExp(
     `^ProductExport_${account}-user_\\d{2}-\\d{2}-\\d{2}[\\s_]\\d{2}-\\d{2}-\\d{2}\\.csv$`,
@@ -256,13 +262,13 @@ async function pushToGitHub(config, jsonContent) {
 async function main() {
   // Resolve CSV paths
   if (!bmPath || !dcPath) {
-    console.log('Auto-detecting CSVs in ~/Downloads…');
+    console.log('Auto-detecting CSVs in export list/…');
     bmPath = findLatestExport(ACCOUNT_BM);
     dcPath = findLatestExport(ACCOUNT_DC);
   }
 
-  if (!bmPath) { console.error(`ERROR: No BM export (account ${ACCOUNT_BM}) found in Downloads.`); process.exit(1); }
-  if (!dcPath) { console.error(`ERROR: No DC export (account ${ACCOUNT_DC}) found in Downloads.`); process.exit(1); }
+  if (!bmPath) { console.error(`ERROR: No BM export (account ${ACCOUNT_BM}) found in export list/.`); process.exit(1); }
+  if (!dcPath) { console.error(`ERROR: No DC export (account ${ACCOUNT_DC}) found in export list/.`); process.exit(1); }
 
   console.log(`BM → ${path.basename(bmPath)}`);
   console.log(`DC → ${path.basename(dcPath)}`);

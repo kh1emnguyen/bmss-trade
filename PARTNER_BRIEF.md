@@ -201,4 +201,13 @@ This script auto-detects the CSVs, applies all filter rules (ALM Warehouse rows 
 
 **Step 3 — Log the result.**
 Append a single line to `scripts/refresh-log.txt` in this format:
-`YYYY-MM
+`YYYY-MM-DD HH:MM | OK | <N> SKUs | BM file: <filename> | DC file: <filename>`
+or on failure:
+`YYYY-MM-DD HH:MM | FAILED | <reason>`
+
+**Step 4 — Done.**
+The GitHub Actions workflow will pick up the push and redeploy the live app within ~2 minutes. No further action needed.
+
+---
+
+*End of scheduled task prompt.*
