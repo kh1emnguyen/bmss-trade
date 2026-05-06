@@ -4,6 +4,7 @@ import { PREMIUM_BANDS, VOLUME_BANDS, passesPriceBand } from './pricing';
 
 const PAGE = 100;
 
+// Returns total carton disc price (WINE only, else null)
 function calcDiscPrice(r, params) {
   if (r.category !== 'WINE') return null;
   const d1 = parseFloat(params.d1) || 1;
@@ -11,6 +12,20 @@ function calcDiscPrice(r, params) {
   const m1 = parseFloat(params.m1) || 1;
   const m2 = parseFloat(params.m2) || 1;
   return (r.dc * r.cs) / d1 / d2 * m1 * m2;
+}
+
+// Returns per-unit disc price (WINE only, else null)
+function calcDiscPricePerUnit(r, params) {
+  const carton = calcDiscPrice(r, params);
+  if (carton === null || !r.cs) return null;
+  return carton / r.cs;
+}
+
+// Save per carton = (BM $/U − Disc $/U) × CS  (WINE only, else null)
+function calcSavePerCarton(r, params) {
+  const dpu = calcDiscPricePerUnit(r, params);
+  if (dpu === null) return null;
+  return (r.bm - dpu) * r.cs;
 }
 
 export default function OpportunitiesPage({ rows, printing = false, printMode = 'database', formulaParams = { d1: '1.1', d2: '1.29', m1: '1.145', m2: '1.05' } }) {
@@ -99,7 +114,7 @@ export default function OpportunitiesPage({ rows, printing = false, printMode = 
     <div className="section">
       <h2>All SKUs — {rows.length.toLocaleString()} matched lines</h2>
       <div className="formula-callout">
-        Highlighted columns: <b>Diff %</b> (DC vs BM — sorted by largest discount in DC's favour by default) and <b>Disc Price</b> (applied margin, WINE only). The Disc Price column shows a value <b>only for WINE rows</b>; everything else displays "—".
+        Highlighted columns: <b>Diff %</b> (DC vs BM — sorted by largest discount in DC's favour by default) and <b>Disc $/U / Disc $/CS</b> (applied margin, WINE only). Disc price columns show a value <b>only for WINE rows</b>; all other categories display "—". <b>Save $/CS</b> = (BM $/U − Disc $/U) × CS.
       </div>
 
       <div className="filter-row">
@@ -157,16 +172,21 @@ export default function OpportunitiesPage({ rows, printing = false, printMode = 
               <Th k="desc">Product</Th>
               <Th k="category">Cat</Th>
               <Th k="cs" num>CS</Th>
-              {!isQuotation && <Th k="bm" num>BM $</Th>}
-              {!isQuotation && <Th k="dc" num>DC $</Th>}
+              {!isQuotation && <Th k="bm" num>BM $/U</Th>}
+              {!isQuotation && <Th k="dc" num>DC $/U</Th>}
               {!isQuotation && <Th k="diff_pct" num extra="col-pct">Diff %</Th>}
-              <Th k="disc_price" num extra="col-disc">Disc Price</Th>
-              {!isQuotation && <Th k="diff_abs" num>Diff $/u</Th>}
-              {!isQuotation && <Th k="sv_carton" num>Save / Carton</Th>}
+              <Th k="disc_price" num extra="col-disc">Disc $/U</Th>
+              <Th k="disc_price_cs" num extra="col-disc">Disc $/CS</Th>
+              {!isQuotation && <Th k="sv_carton" num>Save $/CS</Th>}
             </tr>
           </thead>
           <tbody>
-            {filtered.slice(0, printing ? filtered.length : shown).map((p) => (
+            {filtered.slice(0, printing ? filtered.length : shown).map((p) => {
+              const discPU  = calcDiscPricePerUnit(p, formulaParams);
+              const discCS  = calcDiscPrice(p, formulaParams);
+              const saveCS  = calcSavePerCarton(p, formulaParams);
+              const dash    = <span style={{ color: '#9ca3af' }}>—</span>;
+              return (
               <tr key={p.code}>
                 <td>
                   <div className="desc">{safeStr(p.desc).trim() || '—'}</div>
@@ -182,12 +202,19 @@ export default function OpportunitiesPage({ rows, printing = false, printMode = 
                   </td>
                 )}
                 <td className="num col-disc">
-                  {p.category === 'WINE' ? fmt2(calcDiscPrice(p, formulaParams)) : <span style={{ color: '#9ca3af' }}>—</span>}
+                  {discPU !== null ? fmt2(discPU) : dash}
                 </td>
-                {!isQuotation && <td className="num">{p.diff_abs >= 0 ? '+' : ''}{fmt2(p.diff_abs)}</td>}
-                {!isQuotation && <td className="num" style={{ color: '#047857', fontWeight: 600 }}>{fmt2(p.sv_carton)}</td>}
+                <td className="num col-disc">
+                  {discCS !== null ? fmt2(discCS) : dash}
+                </td>
+                {!isQuotation && (
+                  <td className="num" style={{ color: '#047857', fontWeight: 600 }}>
+                    {saveCS !== null ? fmt2(saveCS) : dash}
+                  </td>
+                )}
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
