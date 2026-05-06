@@ -1,6 +1,6 @@
 {
   "_comment": "Rename this file to config.json, then replace github_token with the PAT Khiem sends you. Everything else is already filled in.",
   "github_token": "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",
-  "github_repo": "kh1emnguyen/bmss-trade",
+  "github_repo": "kh1emnguyen/bmss-swing-trade",
   "github_branch": "main"
 }

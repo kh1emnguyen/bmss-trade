@@ -1,6 +1,6 @@
 {
   "_comment": "Copy this file to config.json (same folder), then replace the placeholder values below. config.json is gitignored and will never be committed.",
   "github_token": "github_pat_YOUR_TOKEN_HERE",
-  "github_repo": "your-username/bmss-trade",
+  "github_repo": "your-username/bmss-swing-trade",
   "github_branch": "main"
 }

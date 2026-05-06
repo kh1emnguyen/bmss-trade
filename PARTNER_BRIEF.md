@@ -117,7 +117,7 @@ Hand the partner two new ALM Product Export CSVs (one per account) and ask Claud
 ## 8. Project layout
 
 ```
-bmss-trade-v2/
+bmss-swing-trade/
 ├── package.json              react-scripts 5.0.1, React 18
 ├── public/
 │   └── index.html            CRA root template
@@ -141,7 +141,7 @@ bmss-trade-v2/
 
 ---
 
-*Migration brief — bmss-trade-v2. Reach out to Khiem before adjusting the formula or filter rules so we keep one source of truth.*
+*Migration brief — bmss-swing-trade. Reach out to Khiem before adjusting the formula or filter rules so we keep one source of truth.*
 
 ---
 
@@ -157,7 +157,7 @@ This section is read and executed directly by Claude (Cowork). No manual chat in
 Ask Khiem to send you a GitHub access token (a short string starting with `github_pat_` or `ghp_`). He generates this from his GitHub account — it takes him 2 minutes. You just need to receive it (e.g. via WhatsApp or email).
 
 **Step B — Drop the token into Cowork.**
-Import this `bmss-trade` folder into Cowork, then type exactly this into the chat:
+Import this `bmss-swing-trade` folder into Cowork, then type exactly this into the chat:
 
 > *"Set up my GitHub config using this token: [paste the token Khiem sent]"*
 
@@ -179,11 +179,11 @@ That is the entire setup.
 
 ---
 
-**BMSS Trade — Monday data refresh**
+**BMSS Swing Trade — Monday data refresh**
 
 You are running an automated weekly task. Do not ask clarifying questions — execute all steps in order.
 
-**Context:** The selected workspace folder IS the bmss-trade project. It contains a React dashboard comparing BM (ALM account 4420) and DC (ALM account 2088) pricelists. The data lives in `src/data.json` and is regenerated each week from two ALM Product Export CSVs. GitHub credentials are stored in `scripts/config.json` (already configured — repo: kh1emnguyen/bmss-trade, branch: main).
+**Context:** The selected workspace folder IS the bmss-swing-trade project. It contains a React dashboard comparing BM (ALM account 4420) and DC (ALM account 2088) pricelists. The data lives in `src/data.json` and is regenerated each week from two ALM Product Export CSVs. GitHub credentials are stored in `scripts/config.json` (already configured — repo: kh1emnguyen/bmss-swing-trade, branch: main).
 
 **Step 1 — Locate the CSV exports.**
 Look in the user's Downloads folder for the two most-recent files matching this pattern:
@@ -193,7 +193,7 @@ Look in the user's Downloads folder for the two most-recent files matching this 
 If either file is missing or older than 7 days, stop and write a plain-text note to `scripts/refresh-log.txt` explaining which file was not found, then exit.
 
 **Step 2 — Run the regeneration script.**
-From the bmss-trade project folder, run:
+From the bmss-swing-trade project folder, run:
 ```
 node scripts/regenerate.js
 ```

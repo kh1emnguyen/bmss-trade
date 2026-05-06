@@ -85,7 +85,7 @@ export default function App() {
     <div className="app">
       <div className="app-header-row">
         <div>
-          <h1>BMSS Trade Opportunity Dashboard — BM vs DC</h1>
+          <h1>BMSS Swing Trade Dashboard — BM vs DC</h1>
           <div className="subtitle">
             All-SKU comparison · DC ≤ BM × 1.05 · ≥ $10/unit on Wine &amp; Spirits · Disc Price = configurable margin (WINE only)
           </div>
@@ -101,7 +101,7 @@ export default function App() {
       </div>
 
       <div className="print-meta">
-        <span>BMSS Trade Dashboard — {TAB_LABELS[tab]}</span>
+        <span>BMSS Swing Trade — {TAB_LABELS[tab]}</span>
         <span>Exported {printTimestamp.current}</span>
       </div>
 

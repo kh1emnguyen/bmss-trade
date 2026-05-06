@@ -1,4 +1,4 @@
-# bmss-trade-v2
+# bmss-swing-trade
 
 Interactive trade opportunity dashboard comparing **BM** (BMSS / ALM 4420) and **DC** (Duncans / ALM 2088) pricelists. Two views — a category drill-down and an all-SKU table — with a baked-in **Discount Price** column quotable to trade clients. Scope: alcohol categories only (WINE, SPIRITS, RTDS, CIDER, LIQUEURS, BEER).
 
@@ -16,7 +16,7 @@ The dev server opens at <http://localhost:3000>.
 ## File layout
 
 ```
-bmss-trade-v2/
+bmss-swing-trade/
 ├── package.json              react-scripts 5.0.1, React 18
 ├── public/
 │   └── index.html            CRA root template
@@ -35,14 +35,14 @@ bmss-trade-v2/
 After unzipping:
 
 ```bash
-cd bmss-trade-v2
+cd bmss-swing-trade
 git init
 git add .
-git commit -m "Initial commit: bmss-trade-v2"
+git commit -m "Initial commit: bmss-swing-trade"
 git branch -M main
 
-# Create an empty repo on github.com named bmss-trade-v2 first, then:
-git remote add origin git@github.com:<your-username>/bmss-trade-v2.git
+# Create an empty repo on github.com named bmss-swing-trade first, then:
+git remote add origin git@github.com:<your-username>/bmss-swing-trade.git
 git push -u origin main
 ```
 

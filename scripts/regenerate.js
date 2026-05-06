@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * regenerate.js — BMSS Trade dataset refresh + auto-publish
+ * regenerate.js — BMSS Swing Trade dataset refresh + auto-publish
  *
  * ─── WHAT IT DOES ────────────────────────────────────────────────────────────
  *   1. Finds the two most-recent ALM Product Export CSVs in export list/
@@ -14,10 +14,10 @@
  *   a) Copy scripts/config.example.json → scripts/config.json
  *   b) Fill in three values:
  *        github_token  — a GitHub Fine-Grained PAT with "Contents: Read & Write"
- *                        on the bmss-trade repo. Create at:
+ *                        on the bmss-swing-trade repo. Create at:
  *                        github.com → Settings → Developer Settings →
  *                        Personal access tokens → Fine-grained tokens
- *        github_repo   — e.g. "khiem/bmss-trade"
+ *        github_repo   — e.g. "khiem/bmss-swing-trade"
  *        github_branch — "main" (leave as-is)
  *   config.json is gitignored — it never gets committed or shared.
  *
